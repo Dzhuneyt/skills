@@ -10,7 +10,7 @@ Execute the following steps:
 1. Run `git fetch` to get the latest changes from the remote.
 2. Use local `git` to view staged and unstaged changes. Prefer a one-liner that lists files and diffs.
 3. Based on the changes, generate a concise commit message suggestion, that follows the conventional commit format.
-5. ALWAYS ask for confirmation before executing the commit and push. The confirmation should follow the format specified below.
+4. ALWAYS ask for confirmation before executing the commit and push. The confirmation should follow the format specified below.
 
 *Confirmation format:*
 - Commit message: <commit message>
