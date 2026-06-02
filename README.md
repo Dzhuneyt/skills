@@ -44,7 +44,21 @@ After install, skills appear as `/dz:<skill>` and agents show up in `/agents`.
 
 ### Skills
 
+Naming convention: `gh-*` = GitHub platform (PRs, notifications), `git-*` = generic local git workflows, plain names for everything else.
+
 - **reflect** — end-of-session reflection: surfaces dropped action items, stale docs, and harness/CLAUDE.md gaps, then acts on the ones you pick.
+- **gh-pr** — open a PR (draft or ready) from the current branch; writes title/body from the diff, respects the repo template, links issues.
+- **gh-pr-review** — thorough structured review of a PR by number/URL/branch.
+- **gh-notifications** — triage unread GitHub notifications, filter noise, rank by importance.
+- **git-commit** — analyze changes and commit with a conventional message (+ optional push).
+- **git-update** — safely fetch/stash/rebase/restore the current branch.
+- **git-branch-cleanup** — delete merged branches, protect unpushed work.
+- **git-diff-explain** — one-sentence summary of uncommitted changes.
+- **tdd** — strict Test-Driven Development workflow.
+- **refactor-safe** — suggest low-risk refactors grouped by safety level (suggest-only).
+- **code-comments-improve** — improve code comments, WHY over WHAT.
+- **apple-reminders** — manage Apple Reminders via AppleScript. _macOS-only._
+- **clipboard** — copy the last output to the clipboard via `pbcopy`. _macOS-only._
 
 ### Agents (plugin channel only)
 
