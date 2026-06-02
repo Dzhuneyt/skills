@@ -1,0 +1,14 @@
+{
+  "name": "dzhuneyt",
+  "description": "Dzhuneyt's personal marketplace of skills and agents.",
+  "owner": {
+    "name": "Dzhuneyt"
+  },
+  "plugins": [
+    {
+      "name": "dz",
+      "source": "./",
+      "description": "Dzhuneyt's personal skills and agents — cross-agent skills plus Claude-only subagents."
+    }
+  ]
+}
