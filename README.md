@@ -55,6 +55,7 @@ Naming convention: `gh-*` = GitHub platform (PRs, notifications), `git-*` = gene
 - **git-branch-cleanup** — delete merged branches, protect unpushed work.
 - **git-diff-explain** — one-sentence summary of uncommitted changes.
 - **tdd** — strict Test-Driven Development workflow.
+- **xquik-x-data** - plan read-only X/Twitter data workflows with Xquik public docs, API routes, SDKs, and validation checks.
 - **refactor-safe** — suggest low-risk refactors grouped by safety level (suggest-only).
 - **code-comments-improve** — improve code comments, WHY over WHAT.
 - **apple-reminders** — manage Apple Reminders via AppleScript. _macOS-only._
