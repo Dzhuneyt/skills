@@ -44,7 +44,7 @@ All local — no network, no push — so they fail in milliseconds before any ex
 
 5. **On the default branch.** Resolve locally with `git symbolic-ref refs/remotes/origin/HEAD` to avoid a network call. A PR from `main` into `main` is almost always wrong. Caveat: that ref only exists if the clone set `origin/HEAD` (or someone ran `git remote set-head origin -a`); if it's missing, skip this here and let Preflight resolve the default branch over the network.
 6. **Mid-operation.** Check for `MERGE_HEAD`, `.git/rebase-merge`, `.git/rebase-apply`, `.git/CHERRY_PICK_HEAD`. A rebase/merge/cherry-pick in flight means the tree is half-applied — a PR now is garbage.
-7. **Zero commits ahead of base.** `git rev-list --count origin/<base>..HEAD`. Catches "already merged," "nothing to ship," and "wrong base" at once. `origin/<base>` may be locally stale — fine for a sanity check, don't treat it as authoritative.
+7. **Zero commits ahead of base.** A smoke test only — base isn't resolved yet (that's Phase 2). Compare against the locally-resolved default branch (the `origin/HEAD` target from Step 0.5; skip this check if that ref is missing) using `git rev-list --count origin/<default>..HEAD`. Catches "already merged," "nothing to ship," and "wrong base" cheaply. Phase 2 authoritatively determines the base — including any user-specified base — and supersedes this check; a non-zero count here is not a guarantee against the real base, and `origin/<default>` may be locally stale.
 
 Once Step 0 passes, `git branch --show-current` gives the head branch for everything below.
 
