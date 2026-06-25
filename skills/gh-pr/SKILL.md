@@ -144,6 +144,9 @@ git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null
 
 ## Compose the title and body
 
+**Optional: refresh the base before writing the body.**
+Run `git fetch origin <base>` to update `origin/<base>` so the diff commands from Phase 2 (`git diff --stat origin/<base>...HEAD`, `git log ... origin/<base>..HEAD`) reflect the true merge-base rather than a potentially stale local copy. Do this when the base may have moved since the last fetch — merges, rebases, or a shared branch with active teammates. Skip it when speed matters or you know the base is fresh (e.g. you just pulled it). It costs one network round-trip.
+
 Check for project conventions first:
 
 - **PR template** — look for `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE.md`, or a `.github/PULL_REQUEST_TEMPLATE/` directory. If one exists, fill its sections rather than inventing your own structure. The maintainers chose that shape for a reason.
