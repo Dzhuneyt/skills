@@ -43,7 +43,7 @@ All local — no network, no push — so they fail in milliseconds before any ex
 **Confirm and stop** — possible but almost always a mistake, so pause rather than refuse:
 
 5. **On the default branch.** Resolve locally with `git symbolic-ref refs/remotes/origin/HEAD` to avoid a network call. A PR from `main` into `main` is almost always wrong. Caveat: that ref only exists if the clone set `origin/HEAD` (or someone ran `git remote set-head origin -a`); if it's missing, skip this here and let Preflight resolve the default branch over the network.
-6. **Mid-operation.** Check for `MERGE_HEAD`, `.git/rebase-merge`, `.git/rebase-apply`, `.git/CHERRY_PICK_HEAD`. A rebase/merge/cherry-pick in flight means the tree is half-applied — a PR now is garbage.
+6. **Mid-operation.** Check for `MERGE_HEAD`, `.git/rebase-merge`, `.git/rebase-apply`, `.git/CHERRY_PICK_HEAD`, `.git/REVERT_HEAD`. A rebase/merge/cherry-pick/revert in flight means the tree is half-applied — a PR now is garbage.
 7. **Zero commits ahead of base.** `git rev-list --count origin/<base>..HEAD`. Catches "already merged," "nothing to ship," and "wrong base" at once. `origin/<base>` may be locally stale — fine for a sanity check, don't treat it as authoritative.
 
 Once Step 0 passes, `git branch --show-current` gives the head branch for everything below.
