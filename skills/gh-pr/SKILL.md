@@ -44,7 +44,7 @@ All local — no network, no push — so they fail in milliseconds before any ex
 **Confirm and stop** — possible but almost always a mistake, so pause rather than refuse:
 
 6. **On the default branch.** A PR from `main` into `main` is almost always wrong. Cheap path: if `git symbolic-ref refs/remotes/origin/HEAD` resolves locally (it only exists when the clone set `origin/HEAD`, e.g. via `git remote set-head origin -a`), compare against it here. If it's missing, skip the check here — Preflight resolves the default branch authoritatively and re-checks.
-7. **Mid-operation.** Check for `MERGE_HEAD`, `.git/rebase-merge`, `.git/rebase-apply`, `.git/CHERRY_PICK_HEAD`. A rebase/merge/cherry-pick in flight means the tree is half-applied — a PR now is garbage.
+7. **Mid-operation.** Check for `MERGE_HEAD`, `.git/rebase-merge`, `.git/rebase-apply`, `.git/CHERRY_PICK_HEAD`, `.git/REVERT_HEAD`. A rebase/merge/cherry-pick/revert in flight means the tree is half-applied — a PR now is garbage.
 8. **Zero commits ahead of base.** `git rev-list --count origin/<base>..HEAD`. Catches "already merged," "nothing to ship," and "wrong base" at once. `origin/<base>` may be locally stale — fine for a sanity check, don't treat it as authoritative.
 
 Once Step 0 passes, `git branch --show-current` gives the head branch for everything below.
