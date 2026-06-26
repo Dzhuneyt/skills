@@ -43,7 +43,7 @@ All local — no network, no push — so they fail in milliseconds before any ex
 
 **Confirm and stop** — possible but almost always a mistake, so pause rather than refuse:
 
-6. **On the default branch.** Resolve locally with `git symbolic-ref refs/remotes/origin/HEAD` to avoid a network call. A PR from `main` into `main` is almost always wrong. Caveat: that ref only exists if the clone set `origin/HEAD` (or someone ran `git remote set-head origin -a`); if it's missing, skip this here and let Preflight resolve the default branch over the network.
+6. **On the default branch.** A PR from `main` into `main` is almost always wrong. Cheap path: if `git symbolic-ref refs/remotes/origin/HEAD` resolves locally (it only exists when the clone set `origin/HEAD`, e.g. via `git remote set-head origin -a`), compare against it here. If it's missing, skip the check here — Preflight resolves the default branch authoritatively and re-checks.
 7. **Mid-operation.** Check for `MERGE_HEAD`, `.git/rebase-merge`, `.git/rebase-apply`, `.git/CHERRY_PICK_HEAD`. A rebase/merge/cherry-pick in flight means the tree is half-applied — a PR now is garbage.
 8. **Zero commits ahead of base.** `git rev-list --count origin/<base>..HEAD`. Catches "already merged," "nothing to ship," and "wrong base" at once. `origin/<base>` may be locally stale — fine for a sanity check, don't treat it as authoritative.
 
@@ -54,7 +54,11 @@ Once Step 0 passes, `git branch --show-current` gives the head branch for everyt
 Costs a round trip, so it runs only after Step 0 clears.
 
 - `gh auth status` — confirm the CLI is authenticated. If not, point the user at `gh auth login`; do not log in for them.
-- If `origin/HEAD` was missing in Step 0, resolve the default branch now (see Phase 2) and re-check the head branch isn't the default.
+- **Resolve the default branch once, here.** Everything downstream (the Step 0 default-branch check, the base in Phase 2) refers back to this single value. Fallback chain — first hit wins:
+  1. `git symbolic-ref --short refs/remotes/origin/HEAD` → strip the `origin/` prefix (local, no round trip).
+  2. `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name` (authoritative, one round trip).
+
+  If Step 0's local check was skipped because `origin/HEAD` was missing, re-check now that the head branch isn't this default.
 
 ---
 
@@ -64,11 +68,7 @@ Everything in this phase is local. Resolve all of it before pushing.
 
 ## Determine the base branch
 
-```bash
-gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
-```
-
-Use the default unless the user named a different base. Stacked PRs (a feature branch targeting another feature branch) are real but rare — the user usually says so. When in doubt, ask rather than assume `main`.
+Reuse the default branch already resolved in Preflight — don't resolve it again. Use that default unless the user named a different base. Stacked PRs (a feature branch targeting another feature branch) are real but rare — the user usually says so. When in doubt, ask rather than assume `main`.
 
 ## Assess local state
 
