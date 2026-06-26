@@ -54,6 +54,7 @@ Naming convention: `gh-*` = GitHub platform (PRs, notifications), `git-*` = gene
 - **git-update** — safely fetch/stash/rebase/restore the current branch.
 - **git-branch-cleanup** — delete merged branches, protect unpushed work.
 - **git-diff-explain** — one-sentence summary of uncommitted changes.
+- **new-project** — disciplined intake for a project from scratch: interview one topic at a time, write an AI-readable vision doc, walk the key technical decisions, then propose a staged build plan.
 - **tdd** — strict Test-Driven Development workflow.
 - **refactor-safe** — suggest low-risk refactors grouped by safety level (suggest-only).
 - **code-comments-improve** — improve code comments, WHY over WHAT.
