@@ -155,7 +155,7 @@ git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null
 
 Check for project conventions first:
 
-- **PR template** — look for `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE.md`, or a `.github/PULL_REQUEST_TEMPLATE/` directory. If one exists, fill its sections rather than inventing your own structure. The maintainers chose that shape for a reason.
+- **PR template** — GitHub resolves templates from three root locations in priority order: `.github/`, `docs/`, and the repo root. In each location look for `pull_request_template.md`, `PULL_REQUEST_TEMPLATE.md`, or a `PULL_REQUEST_TEMPLATE/` directory. So the full set of candidates is: `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/PULL_REQUEST_TEMPLATE/`, `docs/pull_request_template.md`, `docs/PULL_REQUEST_TEMPLATE.md`, `docs/PULL_REQUEST_TEMPLATE/`, `pull_request_template.md`, `PULL_REQUEST_TEMPLATE.md`, `PULL_REQUEST_TEMPLATE/`. If one exists, fill its sections rather than inventing your own structure. The maintainers chose that shape for a reason.
 - **Linked issues** — scan the branch name and commits:
   - GitHub issues like `#123` / `fixes #123`.
   - Linear keys like `eng-412`, often in branch names (`dzh/eng-412-token-refresh`). Linear auto-links PRs whose title or body contains the key, so make sure it lands in one.
