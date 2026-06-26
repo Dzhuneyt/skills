@@ -74,15 +74,23 @@ Reuse the default branch already resolved in Preflight — don't resolve it agai
 
 Gather the facts once; they feed both the branch-fit decision and the PR body.
 
+First resolve the upstream once, because the default first-PR path has none — the branch has never been pushed, so `origin/<branch>` doesn't exist and any `origin/<branch>..HEAD` comparison errors out:
+
+```bash
+git rev-parse --abbrev-ref @{u} 2>/dev/null               # upstream, or empty
+```
+
+- **Upstream exists** → unpushed commits are `git log --oneline @{u}..HEAD`.
+- **No upstream** (first PR) → there's nothing to compare against; treat *every* commit since base as unpushed and skip the `origin/<branch>` comparisons entirely.
+
 ```bash
 git status --porcelain                                    # dirty tree?
-git log --oneline origin/<branch>..HEAD                   # unpushed commits?
 git log --reverse --format='%s%n%b' origin/<base>..HEAD   # commits since base
 git diff --stat origin/<base>...HEAD                      # files + scope
 gh pr list --head <branch> --state open --json number,url,title  # open PR?
 ```
 
-The **local-only delta** = unpushed commits + uncommitted changes. That's the work that isn't yet captured anywhere — and it's the thing the branch-fit check reasons about.
+The **local-only delta** = unpushed commits + uncommitted changes. That's the work that isn't yet captured anywhere — and it's the thing the branch-fit check reasons about. On the first-PR path every commit since base is part of that delta.
 
 ## Branch-fit decision
 
