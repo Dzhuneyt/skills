@@ -118,6 +118,7 @@ The remedy forks on committed vs uncommitted, because the mechanics and risk dif
   move the work off this branch:
 
   uncommitted  ->  git switch -c <new> origin/<base>      safe, just do it
+                   (then continue — PR opens from <new>)
   committed    ->  git switch -c <new> origin/<base>      you do this
                    cherry-pick the stray commits onto <new>
                    ...then reset old branch + force-push   user's call — STOP
