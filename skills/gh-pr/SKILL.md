@@ -161,7 +161,7 @@ Check for project conventions first:
   - Linear keys like `eng-412`, often in branch names (`dzh/eng-412-token-refresh`). Linear auto-links PRs whose title or body contains the key, so make sure it lands in one.
   - If the branch clearly maps to an issue but no closing keyword is present, add one (`Closes #123` / `Fixes ENG-412`) unless the change only partially addresses it.
 
-**Title:** one line, imperative, describing the change as a whole — if the branch has five commits, summarize all of them, not commit #5. **Always Conventional Commit format**, regardless of the repo's existing style. Type and scope reflect the net change.
+**Title:** one line, imperative, describing the change as a whole — if the branch has five commits, summarize all of them, not commit #5. **Conventional Commit format by default**, but match an evident repo convention when one clearly exists (e.g. a commitlint config, or consistent existing PR/commit titles) — forcing CC against a repo's settled style can clash with commitlint or squash-merge tooling. Type and scope reflect the net change.
 
 ### Conventional Commit format
 
