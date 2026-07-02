@@ -47,6 +47,7 @@ After install, skills appear as `/dz:<skill>` and agents show up in `/agents`.
 Naming convention: `gh-*` = GitHub platform (PRs, notifications), `git-*` = generic local git workflows, plain names for everything else.
 
 - **reflect** — end-of-session reflection: surfaces dropped action items, stale docs, and harness/CLAUDE.md gaps, then acts on the ones you pick.
+- **pyramid-discussion** — top-down elicitation: calibrates topic depth, then apex → pillars → blocks → concrete actionables.
 - **gh-pr** — open a PR (draft or ready) from the current branch; writes title/body from the diff, respects the repo template, links issues.
 - **gh-pr-review** — thorough structured review of a PR by number/URL/branch.
 - **gh-notifications** — triage unread GitHub notifications, filter noise, rank by importance.
