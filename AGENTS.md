@@ -29,7 +29,7 @@ agents/<name>.md         # Claude plugin channel ONLY (npx skills ignores these)
   - `gh-*` — GitHub *platform* (PRs, notifications, reviews)
   - `git-*` — generic *local* git workflows (commit, rebase, branch cleanup)
   - plain name — everything else (`reflect`, `clipboard`, `tdd`)
-- **Adding a skill** — create `skills/<name>/SKILL.md` with frontmatter `name:` (must equal the dir name) + a trigger-oriented `description:`. No registration step; both installers auto-discover it.
+- **Adding a skill** — create `skills/<name>/SKILL.md` with frontmatter `name:` (must equal the dir name) + a trigger-oriented `description:`. No registration step; both installers auto-discover it. **Then add a one-line bullet to the `### Skills` list in `README.md`** — the installers ignore README, but a skill missing from it is invisible to humans browsing the repo. Same rule for agents → `### Agents` list. A PR that adds a skill without its README bullet is incomplete.
 - **Adding an agent** — create `agents/<name>.md` with frontmatter `name:` (must equal filename), `description:`, `tools:`, `model:`. Reaches **plugin users only** — that's expected, not a bug.
 - **Versioning** — `plugin.json` has no `version`, so **every commit is a new plugin version**. Don't add a version field unless you intend to pin/freeze releases.
 - **Surgical edits** — match each skill's existing voice and structure; don't refactor a skill while editing an adjacent one.
