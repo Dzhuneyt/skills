@@ -48,6 +48,7 @@ Naming convention: `gh-*` = GitHub platform (PRs, notifications), `git-*` = gene
 
 - **reflect** — end-of-session reflection: surfaces dropped action items, stale docs, and harness/CLAUDE.md gaps, then acts on the ones you pick.
 - **pyramid-discussion** — top-down elicitation: calibrates topic depth, then apex → pillars → blocks → concrete actionables.
+- **research-fanout** — interactive research orchestrator: scopes a fuzzy goal via a short interview, presents an approvable plan tree, then fans out parallel subagents (model-tiered for cost) and rolls up findings per-fork into a report + executive summary.
 - **gh-pr** — open a PR (draft or ready) from the current branch; writes title/body from the diff, respects the repo template, links issues.
 - **gh-pr-review** — thorough structured review of a PR by number/URL/branch.
 - **gh-notifications** — triage unread GitHub notifications, filter noise, rank by importance.
@@ -91,7 +92,8 @@ Naming convention: `gh-*` = GitHub platform (PRs, notifications), `git-*` = gene
    Instructions here. Use $ARGUMENTS to capture text typed after the command.
    ```
 
-3. Commit + push. Both channels pick it up.
+3. Add a one-line bullet for it to the [Skills](#skills) list above. The installers ignore README, but a skill missing here is invisible to anyone browsing the repo.
+4. Commit + push. Both channels pick it up.
 
 ## Adding an agent (plugin channel only)
 
