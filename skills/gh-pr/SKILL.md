@@ -222,6 +222,8 @@ If `gh pr create` says a PR already exists, don't open a second one — surface 
 
 Print the PR URL on its own line. That's what the user wants. Don't summarize the diff back to them — they just wrote it.
 
+Then, on the next line, print a one-line auto-merge hint: `enable auto-merge: gh pr merge <number> --auto --squash` (substitute the PR number; pick the merge method the repo uses — `--squash`, `--merge`, or `--rebase`). The skill never runs this — it only surfaces the option so the user can opt in explicitly. Skip the hint for draft PRs (not mergeable yet).
+
 ---
 
 ## Hard limits
