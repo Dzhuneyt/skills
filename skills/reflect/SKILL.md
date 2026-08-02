@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: Use when the user invokes /reflect or asks to reflect on, wrap up, or take stock of the current session. Re-reads the in-context conversation and surfaces dropped action items, stale docs, and harness/CLAUDE.md improvement opportunities as small triageable steps, then acts in-session on the ones the user selects. Not a git-history retro and not a full doc audit.
+description: Use when the user invokes /reflect or asks to reflect on, wrap up, or take stock of the current session. Re-reads the in-context conversation and surfaces dropped action items, stale docs, skillify opportunities, and CLAUDE.md/AGENTS.md improvements as a ranked shortlist, then acts in-session on the ones the user selects. Not a git-history retro and not a full doc audit.
 ---
 
 # Reflect
@@ -23,7 +23,7 @@ Re-read the conversation end to end. Hold the whole arc in mind before flagging 
 Each detector has a hard confidence bar. An item that does not clear its bar is silently dropped.
 
 **A. Loose ends** — action items or decisions the user skipped.
-- Primary heuristic: find assistant messages that bundled **two or more** decisions/questions into one block, then check whether the user's next reply addressed *all* of them. The unaddressed ones are the highest-value finds — the user reacted to part of a wall of text and the rest fell through.
+- Primary heuristic: find assistant messages that bundled **two or more** decisions/questions into one block, then check whether the user's next reply addressed *all* of them. Example: you asked three things, the user answered one. The unaddressed ones are the highest-value finds — the user reacted to the top of a wall of text and the rest fell through unread.
 - Also catch: explicit "let's do X later", TODOs raised but never returned to, errors acknowledged but not fixed.
 - Bar: concrete evidence in the conversation that the item was raised and never closed.
 
@@ -31,30 +31,48 @@ Each detector has a hard confidence bar. An item that does not clear its bar is 
 - Targeted only: "README section X is now wrong because we changed Y." Name the file and the specific staleness.
 - Bar: a change made this session directly contradicts existing documented behavior. Never propose a from-scratch documentation audit.
 
-**C. Harness gaps** — repetitive work a new Skill or Agent could absorb.
+**C. Skillify / harness gaps** — repetitive work a new Skill or Agent could absorb, or a multi-step recipe worth capturing as a reusable skill.
 - Bar: the pattern recurred **at least twice** this session, or is obviously recurring work. A single occurrence does not qualify.
 
-**D. CLAUDE.md gaps** — global-instruction improvements. Tag each finding as one of:
-- **prose** → a CLAUDE.md edit (a principle, preference, or convention the user clearly holds but hasn't written down).
-- **hook** → a `settings.json` hook, NOT prose. Anything of the form "from now on, whenever X, do Y" is an automated behavior the harness must execute — it cannot live as CLAUDE.md text. Route these through the `update-config` skill when acting.
+**D. CLAUDE.md / AGENTS.md gaps** — memory-file improvements. Tag each finding on two axes:
+- **Scope:** `project` (repo-local `CLAUDE.md`/`AGENTS.md`) vs `global` (user's `~/.claude/CLAUDE.md`). Pick by whether the preference is repo-specific or holds everywhere.
+- **Kind:**
+  - **append** → a new principle, preference, or convention the user clearly holds but hasn't written down.
+  - **rewrite** → an *existing* sentence this session proved wrong, stale, or misleading. Quote the current line and propose the replacement wording — don't just add on top of it.
+  - **hook** → a `settings.json` hook, NOT prose. Anything of the form "from now on, whenever X, do Y" is an automated behavior the harness must execute — it cannot live as memory-file text. Route these through the `update-config` skill when acting.
+- Bar: clear evidence the user holds the preference — they stated it, corrected you on it, or it recurred. A one-off stylistic choice does not qualify.
 
-## Step 3 — Surface for triage
+## Step 3 — Collect into one flat, ranked list
 
-Present findings through `AskUserQuestion` so each is a discrete, digestible card — never a wall of text.
+Gather every finding that cleared its bar — across **all four** detectors — into a single flat list held in memory. Keep each finding's category tag (A/B/C/D), but do NOT group the list by category.
 
-- One `multiSelect` question per **non-empty** category. Each finding is one option: a 1-line label plus a short description. The cards are the reading material; do not precede them with a separate text dump.
-- `AskUserQuestion` requires **at least 2 options** per question. When a category has exactly one finding, add a second "Nothing here — skip" option so the user can decline cleanly.
-- Triage **all** categories first (one `AskUserQuestion` call carrying up to 4 category questions), then act — keep reading up front and action second.
-- **Paginate** any category with more than 4 findings: ask that category in successive rounds of 4 until exhausted.
-- Skip empty categories silently. If all four are empty, say "Nothing worth flagging" and stop.
+- **Rank** by value = confidence × impact. A genuine dropped decision the user cares about outranks a nice-to-have doc tweak. Your #1 is what you'd most want the user to act on.
+- **Take the top 5.** Discard the rest. If more than 5 cleared their bars, say so in one line (e.g. "3 lower-confidence items dropped") so the user knows there's a tail, but do not surface them.
+- If nothing cleared any bar, say "Nothing worth flagging" and stop.
 
-## Step 4 — Act on the selections
+## Step 4 — Ask one finding at a time
 
-Walk the selected items **one at a time**. For each: state the concrete change, get confirmation, then do it in this session.
+Surface the shortlist as **separate, single-select `AskUserQuestion` questions — one question per finding**, in ranked order so your strongest recommendation comes first. Do NOT bundle findings into a single `multiSelect` question; that grouping gets in the way. Each finding is its own decision.
 
-- **A (loose ends):** complete the dropped item, or if it's large, confirm the smallest next step.
+For each finding's question:
+- `header`: the category label — "Loose end", "Doc gap", "Skillify", or "CLAUDE.md".
+- `question`: state the finding concretely (what was dropped / what's stale / what to capture), then ask what to do.
+- `options` (single-select, `multiSelect: false`): put **your recommended action first**, labeled `(Recommended)`. Follow with the realistic alternatives, ending with a clean decline. Typical recommended actions by category:
+  - **A (loose end):** "Finish it now" — or, if large, "Do the smallest next step".
+  - **B (doc gap):** "Show the diff and apply".
+  - **C (skillify):** "Draft the SKILL.md skeleton".
+  - **D (CLAUDE.md/AGENTS.md):** append/rewrite → "Show the edit and apply"; hook → "Wire the hook via update-config".
+  - Always include a "Skip" / "Leave it" option last.
+
+Ask them one at a time (or a few per call, but never more than one **finding** per question). This lets you act on each answer before moving on.
+
+## Step 5 — Act on each selection
+
+For each finding the user chose to act on, do it in this session immediately:
+
+- **A (loose ends):** complete the dropped item, or confirm the smallest next step if it's large.
 - **B (doc gaps):** produce the exact diff and apply on approval.
-- **D (CLAUDE.md):** prose → exact CLAUDE.md diff for approval; hook → invoke `update-config` to wire the hook.
-- **C (harness):** draft a `SKILL.md` skeleton or propose `/gstack-skillify`. The user may accept the stub or defer — do not force a full new skill build inside `/reflect`.
+- **C (skillify):** draft a `SKILL.md` skeleton or propose `/gstack-skillify`. Don't force a full skill build inside `/reflect` — the stub or a deferral is fine.
+- **D (CLAUDE.md/AGENTS.md):** append/rewrite → show the exact memory-file diff (quoting the old line for a rewrite) and apply on approval; hook → invoke `update-config` to wire it.
 
 Persist nothing to disk unless the user explicitly asks for a written record.
