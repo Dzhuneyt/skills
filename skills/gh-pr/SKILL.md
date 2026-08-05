@@ -186,18 +186,49 @@ If the change spans several types, pick the dominant one rather than inventing a
 
 ```markdown
 ## What
-<one or two sentences on what this changes>
+<one or two sentences: which files, what kind of change>
 
 ## Why
-<the reason — the problem, the ticket, the regression>
+<one or two sentences: what made this necessary>
 
 ## Notes for review
-<anything non-obvious: tradeoffs, deferrals, areas to scrutinize>
+<the contestable parts only>
 
 <Closes #N / Fixes ENG-N if applicable>
 ```
 
-Don't pad it. If "Notes for review" is empty, drop the section.
+Target under ~300 words plus at most one table. Past that, the extra is almost always
+restatement.
+
+"Notes for review" is the section that goes wrong. It is not a summary of the diff — the diff is
+right there. It is the short list of things a reviewer could disagree with: an inference you drew,
+a judgement call, a number you're asserting, something you got wrong earlier in the branch. If
+none of that exists, drop the section.
+
+Rules that keep it short:
+
+- **One headline finding, stated first.** Open with the single thing a reviewer must not skim
+  past, in bold. Everything else supports it. Three co-equal bold blocks means you haven't decided
+  what matters.
+- **State an implication once.** If a bullet already says what the finding means, don't add a
+  paragraph explaining what that means in turn.
+- **Point into the artifact, don't copy it.** When the diff already carries the full detail,
+  abbreviate and say "full table in the record". The body is a reading order, not a second copy.
+- **Table rows are distinct behaviours, not distinct commands you ran.** Collapse rows sharing an
+  outcome and a cause. Eight verification runs producing four behaviours is a four-row table.
+- **Cut negative results** unless a reviewer would otherwise assume the thing broke.
+- **Scope the body to the diff.** Open questions the change surfaced but doesn't touch belong in
+  an issue, not here.
+
+Rules that keep it useful. Never cut these to save words:
+
+- Where you were wrong earlier in the branch, and what you corrected.
+- Why a superseded decision was right at the time. "X was recorded as not-Y, which was true at
+  merge; Y landed afterwards" reads as drift rather than as an error to hunt for.
+- Exact identifiers: policy IDs, error strings, versions, flags. They tell a reviewer where to
+  look.
+
+Don't pad it.
 
 ## Draft vs ready
 
