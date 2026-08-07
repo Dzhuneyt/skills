@@ -75,8 +75,9 @@ Apply these tests in order. Stop at the first one that answers.
    - state `MERGED` — the branch is merged. This is the squash case.
    - state `OPEN` — protect the branch. Never delete it.
    - state `CLOSED` with no `mergedAt` — the work is abandoned. See the `abandoned` bucket.
-   - no pull request — the state is unknown.
-3. Degraded mode only: compare the merge result to the default branch.
+   - no pull request — go to test 3.
+3. Compare the merge result to the default branch. Run this test in degraded mode, and also
+   in full mode when test 2 finds no pull request.
 
    ```bash
    git merge-tree --write-tree origin/<default> <branch>   # prints a tree sha
@@ -85,6 +86,10 @@ Apply these tests in order. Stop at the first one that answers.
 
    Equal trees mean the branch adds nothing. The branch is merged. A non-zero exit means a
    conflict, so the branch is not merged.
+
+   This test reads content, not history. A branch whose changes reached the default branch by
+   another route also gives equal trees. The result is still safe: equal trees mean the branch
+   holds no content that the default branch lacks.
 
 Never use `git cherry` or `git branch --merged` for this test. Both compare commits, and a
 squash merge rewrites the commits. Both report a fully merged branch as unmerged.
