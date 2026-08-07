@@ -1,37 +1,182 @@
 ---
 name: git-branch-cleanup
-description: Delete merged branches and show branch status summary
-allowed-tools: [Bash]
-disable-model-invocation: true
+description: Use when stale git branches pile up after pull requests merge — local branches marked [gone], squash-merged branches that `git branch --merged` does not list, or leftover remote branches in a repo without auto-delete. Also use when the user names branches to purge, or asks to clean up, prune, or purge branches.
+allowed-tools: [Bash, AskUserQuestion]
 ---
 
-Execute the following steps:
-1. Check if current directory is a valid git repository
-2. Fetch latest changes to ensure branch merge status is current
-3. Identify local branches and categorize them:
-   - Merged branches that are safe to delete
-   - Unmerged branches with unpushed commits (protect these)
-   - Branches with no remote tracking (potential new work)
-4. Show detailed summary of what will/won't be deleted with reasons
-5. Only delete branches that are confirmed merged AND have been pushed
-6. Show final branch status with tracking information
+# Purge stale git branches
 
-Safety rules:
-- Never delete the current branch
-- Never delete main, master, develop, or staging branches
-- Never delete branches with unpushed commits (no remote tracking or ahead of remote)
-- Only delete branches that are fully merged AND have been pushed to remote
-- Always ask for confirmation before any deletion
-- Clearly distinguish between "safe to delete" and "protected" branches
+Delete branches that are already merged. Protect every branch that still holds work.
 
-Branch categorization:
-- **Safe to delete**: Merged branches that exist on remote and are fully merged
-- **Protected - unpushed**: Branches with no remote tracking or ahead of remote
-- **Protected - unmerged**: Branches with unmerged commits
-- **Protected - system**: main, master, develop, staging, current branch
+A squash merge rewrites the commits. After a squash merge, `git branch --merged` does not
+list the branch, and `git branch -d` refuses to delete it. Both tools are therefore unsafe
+signals here. This skill asks GitHub what the pull request merged, then compares that commit
+to the local branch tip.
 
-Output format:
-- Show branches in categories with reasons for protection/deletion
-- Display last commit info and push status for each branch
-- Clearly indicate which branches contain potentially valuable unpushed work
-- Provide summary of cleanup actions taken
+## When to use
+
+Use this skill when any of these are true:
+
+- Merged pull requests left local branches behind.
+- `git branch -vv` marks branches with `[gone]`.
+- The repository has no auto-delete setting, and merged remote branches remain.
+- The user names one or more branches to purge.
+
+Do not use this skill to delete a branch with work that is not merged. Do not use it to
+abandon an open pull request.
+
+## Arguments
+
+`$ARGUMENTS` holds an optional list of branch names.
+
+- If the list is empty, scan the whole repository and propose candidates.
+- If the list has names, evaluate only those names. Run every safety check without change. A
+  named branch gets no softer treatment than a discovered one.
+
+## Step 1: preflight
+
+Run these commands first. Stop if the first command fails.
+
+```bash
+git rev-parse --git-dir                                   # not a repo -> stop
+git symbolic-ref --quiet --short refs/remotes/origin/HEAD  # -> origin/main
+git fetch --prune                                          # every later check needs this
+git worktree list --porcelain                              # branches checked out elsewhere
+git remote get-url origin
+gh auth status
+```
+
+Find the default branch. Never assume the name `main` or `master`. If `git symbolic-ref`
+gives no answer, run `gh repo view --json defaultBranchRef -q .defaultBranchRef.name`. If
+both fail, ask the user.
+
+The `gh` result and the origin host together set the mode. GitHub origin plus valid `gh`
+authentication gives full mode. Anything else gives degraded mode (see Degraded mode).
+
+## Step 2: list the branches
+
+```bash
+git for-each-ref refs/heads \
+  --format='%(refname:short)%09%(upstream:short)%09%(upstream:track)%09%(objectname:short)%09%(committerdate:relative)'
+git for-each-ref refs/remotes/origin \
+  --format='%(refname:short)%09%(objectname:short)%09%(committerdate:relative)'
+```
+
+`%(upstream:track)` prints `[gone]` when the remote branch no longer exists. This is the
+cheapest signal for a merged-and-deleted pull request. It costs no API call.
+
+## Step 3: find the merge state of each branch
+
+Apply these tests in order. Stop at the first one that answers.
+
+1. `git merge-base --is-ancestor <branch> origin/<default>` — exit 0 means a true merge or a
+   fast-forward. No network needed.
+2. `gh pr list --head <branch> --state all --limit 5 --json number,state,url,mergedAt,headRefOid`
+   - state `MERGED` — the branch is merged. This is the squash case.
+   - state `OPEN` — protect the branch. Never delete it.
+   - state `CLOSED` with no `mergedAt` — the work is abandoned. See the `abandoned` bucket.
+   - no pull request — the state is unknown.
+3. Degraded mode only: `git cherry origin/<default> <branch>`. Zero lines that start with `+`
+   means every patch is already upstream. Mark this result approximate.
+
+## Step 4: find the commits that arrive after the merge
+
+A squash merge makes every branch commit look absent from the default branch. Therefore
+`git log origin/<default>..<branch>` cannot separate merged work from new work. Ask GitHub
+for the commit that the pull request actually merged, then compare:
+
+```bash
+git cat-file -e <headRefOid>^{commit}   # the sha must exist locally
+git log --oneline <headRefOid>..<branch>
+git diff --stat <headRefOid>..<branch>
+```
+
+No output means the branch adds nothing new. The branch is safe to delete.
+Output means the branch holds work that the pull request never took. Block the branch.
+
+If `git cat-file` fails, run `git fetch origin <headRefOid>`. If that also fails, treat the
+branch as degraded mode and block it.
+
+## Step 5: sort every branch into one bucket
+
+| Bucket | Condition | Action |
+| --- | --- | --- |
+| `local-merged` | merged, tip equals `headRefOid`, not current, not default, not in a worktree | one batch confirm, then delete |
+| `remote-merged` | `origin/<x>` merged, and no local branch holds work on top of it | one batch confirm, then delete |
+| `orphan-work` | merged, but commits exist after `headRefOid` | blocked |
+| `open-pr` | the pull request is still open | blocked |
+| `worktree` | checked out in another worktree | blocked |
+| `system` | the default branch, or the current branch | blocked |
+| `abandoned` | the pull request closed without a merge | separate question |
+| `stranded` | never pushed, no upstream, no pull request | report only, never delete |
+| `unknown` | has an upstream, not merged, no pull request | report only |
+
+Blocked branches get no delete prompt. Report them and continue.
+
+## Step 6: report, then delete
+
+Show the full report first, before any prompt. Expand each `orphan-work` row with the commit
+sha, the subject, the age, and the diffstat. Give every other row one line.
+
+Then run the prompts in this order.
+
+1. One batch confirm for all `local-merged` branches.
+2. One batch confirm for all `remote-merged` branches.
+3. One separate question for the `abandoned` bucket. Show the pull request URL and the close
+   date. Never merge this question into step 1 or step 2.
+
+Read the sha of each branch before you delete it. Then delete:
+
+```bash
+git branch -D <branch>              # -d refuses squash-merged branches
+git push origin --delete <branch>
+```
+
+`git branch -D` skips the merge check of git. The safety comes from Step 3 and Step 4
+instead. Never call `-D` on a branch that those steps did not clear.
+
+## Step 7: print the undo receipt
+
+Print restore commands after each batch, before the next prompt:
+
+```bash
+git branch feat/login-fix a3f9c21
+git push origin 8b1e044:refs/heads/feat/export
+```
+
+The reflog expires. A printed sha does not. A remote restore needs the object in the local
+repository. Warn the user when the object is absent.
+
+## Degraded mode
+
+Degraded mode starts when `gh` is absent, the network is down, or the origin is not GitHub.
+Report this once, at the top of the run. Then:
+
+- Squash detection falls back to `git cherry` and is approximate.
+- The `orphan-work` check is approximate.
+- The `abandoned` bucket is unavailable.
+- Every candidate needs its own confirm. No batch confirm.
+
+## Failures
+
+One branch that fails does not stop the run. Log the failure and continue. The summary lists
+the branches that succeeded, failed, and were skipped.
+
+## Red flags — stop
+
+- `git branch --merged` used as the merge signal. It misses every squash merge.
+- `git log <default>..<branch>` used as the orphan-work signal. It reports merged work as new.
+- `git branch -D` on a branch that Step 3 did not clear.
+- A delete before the report.
+- A `stranded` branch offered for deletion.
+- The default branch name assumed instead of detected.
+
+## Common mistakes
+
+| Mistake | Correction |
+| --- | --- |
+| Skip `git fetch --prune` | Every merge check reads stale refs. Run it first. |
+| Treat a named branch as pre-approved | Names narrow the scan. They do not skip the checks. |
+| Delete a remote branch with the local counterpart still ahead | The local branch holds the only copy of that work. |
+| Fold `abandoned` into the merged batch | Closed work and merged work need separate decisions. |
+| Print the receipt after the last batch only | Print it after each batch. A later failure must not hide it. |

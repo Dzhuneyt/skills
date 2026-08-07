@@ -54,7 +54,7 @@ Naming convention: `gh-*` = GitHub platform (PRs, notifications), `git-*` = gene
 - **gh-notifications** — triage unread GitHub notifications, filter noise, rank by importance.
 - **git-commit** — analyze changes and commit with a conventional message (+ optional push).
 - **git-update** — safely fetch/stash/rebase/restore the current branch.
-- **git-branch-cleanup** — delete merged branches, protect unpushed work.
+- **git-branch-cleanup** — purge stale local and remote branches. Asks `gh` which PRs merged, so squash merges are found too. Blocks any branch that gained commits after its merge, and prints the shas needed to undo each delete.
 - **git-diff-explain** — one-sentence summary of uncommitted changes.
 - **new-project** — disciplined intake for a project from scratch: interview one topic at a time, write an AI-readable vision doc, walk the key technical decisions, then propose a staged build plan.
 - **tdd** — strict Test-Driven Development workflow.
