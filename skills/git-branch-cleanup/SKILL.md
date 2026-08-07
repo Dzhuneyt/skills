@@ -76,8 +76,22 @@ Apply these tests in order. Stop at the first one that answers.
    - state `OPEN` — protect the branch. Never delete it.
    - state `CLOSED` with no `mergedAt` — the work is abandoned. See the `abandoned` bucket.
    - no pull request — the state is unknown.
-3. Degraded mode only: `git cherry origin/<default> <branch>`. Zero lines that start with `+`
-   means every patch is already upstream. Mark this result approximate.
+3. Degraded mode only: compare the merge result to the default branch.
+
+   ```bash
+   git merge-tree --write-tree origin/<default> <branch>   # prints a tree sha
+   git rev-parse origin/<default>^{tree}
+   ```
+
+   Equal trees mean the branch adds nothing. The branch is merged. A non-zero exit means a
+   conflict, so the branch is not merged.
+
+Never use `git cherry` or `git branch --merged` for this test. Both compare commits, and a
+squash merge rewrites the commits. Both report a fully merged branch as unmerged.
+`git merge-tree` compares content, so the squash does not hide the merge.
+
+`git merge-tree --write-tree` needs git 2.38 or later. On an older git, ask the user before
+you delete anything.
 
 ## Step 4: find the commits that arrive after the merge
 
@@ -94,8 +108,18 @@ git diff --stat <headRefOid>..<branch>
 No output means the branch adds nothing new. The branch is safe to delete.
 Output means the branch holds work that the pull request never took. Block the branch.
 
-If `git cat-file` fails, run `git fetch origin <headRefOid>`. If that also fails, treat the
-branch as degraded mode and block it.
+If `git cat-file` fails, run `git fetch origin <headRefOid>`. If that also fails, use the
+degraded check below.
+
+In degraded mode there is no `headRefOid`. Use the merge result instead:
+
+```bash
+git diff --stat origin/<default> $(git merge-tree --write-tree origin/<default> <branch>)
+```
+
+This prints the content that the branch adds and the default branch does not have. Empty
+output means the branch is safe to delete. Any output is unmerged work, so block the branch.
+This test reports files, not commits, so name the files and not the shas in the report.
 
 ## Step 5: sort every branch into one bucket
 
@@ -152,10 +176,15 @@ repository. Warn the user when the object is absent.
 Degraded mode starts when `gh` is absent, the network is down, or the origin is not GitHub.
 Report this once, at the top of the run. Then:
 
-- Squash detection falls back to `git cherry` and is approximate.
-- The `orphan-work` check is approximate.
-- The `abandoned` bucket is unavailable.
+- Squash detection falls back to `git merge-tree`. The result is exact for content.
+- The `orphan-work` report names files, not commits.
+- The `abandoned` bucket is unavailable. A closed pull request looks the same as no pull
+  request, so those branches land in `unknown` and stay.
 - Every candidate needs its own confirm. No batch confirm.
+
+One case stays invisible in degraded mode. If the merged work was later reverted on the
+default branch, `git merge-tree` reports the branch as unmerged. Report the branch. Never
+delete it.
 
 ## Failures
 
@@ -165,6 +194,7 @@ the branches that succeeded, failed, and were skipped.
 ## Red flags — stop
 
 - `git branch --merged` used as the merge signal. It misses every squash merge.
+- `git cherry` used as the merge signal. It misses every squash merge for the same reason.
 - `git log <default>..<branch>` used as the orphan-work signal. It reports merged work as new.
 - `git branch -D` on a branch that Step 3 did not clear.
 - A delete before the report.
