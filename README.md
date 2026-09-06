@@ -46,7 +46,7 @@ After install, skills appear as `/dz:<skill>` and agents show up in `/agents`.
 
 Naming convention: `gh-*` = GitHub platform (PRs, notifications), `git-*` = generic local git workflows, plain names for everything else.
 
-- **reflect** — end-of-session reflection: surfaces dropped action items, stale docs, and harness/CLAUDE.md gaps, then acts on the ones you pick.
+- **reflect** — end-of-session reflection: catches what would die with the session — dropped action items, hard-won gotchas with no home, stale docs, harness/CLAUDE.md gaps, follow-ups worth an issue or a PR — then acts on the ones you pick.
 - **pyramid-discussion** — top-down elicitation: calibrates topic depth, then apex → pillars → blocks → concrete actionables.
 - **research-fanout** — interactive research orchestrator: scopes a fuzzy goal via a short interview, presents an approvable plan tree, then fans out parallel subagents (model-tiered for cost) and rolls up findings per-fork into a report + executive summary.
 - **gh-pr** — open a PR (draft or ready) from the current branch; writes title/body from the diff, respects the repo template, links issues.
