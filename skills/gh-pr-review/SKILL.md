@@ -15,11 +15,15 @@ You are helping review a pull request. Please provide a thorough, structured rev
 4. Analyze what CI/CD checks are configured and warn if important checks appear to be missing
 5. Analyze the code changes in the diff
 6. Read modified files to understand context beyond the diff
-7. Identify missing changes that should have been made:
+7. Verify each claim before you write it down:
+   - Check out the branch and run the tests the PR touches. Report the real output, not an expectation.
+   - Check the merge state and whether CI ran at all. A green check from before the last push is stale.
+   - If a claim cannot be settled by reading, write a throwaway test that would settle it, run it, then delete it.
+8. Identify missing changes that should have been made:
    - **Missing Logic**: Related code that should be updated but wasn't
    - **Missing Documentation**: Code comments explaining "why" (especially for non-obvious decisions), README updates, API docs that need updating
    - **Missing Tests**: Test cases that should exist for the new functionality
-8. Provide structured feedback covering:
+9. Provide structured feedback covering:
    - **Code Quality**: Logic, readability, maintainability
    - **Security**: Potential vulnerabilities or security concerns  
    - **Performance**: Efficiency and optimization opportunities
@@ -34,6 +38,18 @@ You are helping review a pull request. Please provide a thorough, structured rev
 - ✅ What looks good
 - ⚠️ Areas for improvement  
 - 🔴 Critical issues (if any)
+
+**Ground every finding.**
+
+A finding that only describes code is not finished. Each one carries three parts:
+
+1. **Mechanism** — `file:line` for every claim, so the author can jump straight to it.
+2. **Evidence** — the command output, the test result, the probe you ran. Never inference presented as fact. When something stays unverified, label it and say what would settle it.
+3. **Failure walkthrough** — the same defect retold in the reader's terms. Name who is at the keyboard, the screen they are on, what they type, what they see, and what actually happens. Stop where the damage is done.
+
+When a finding rests on a domain concept, explain that concept first, in three lines or a small table. A reviewer who does not already hold the model cannot judge the finding.
+
+Drop any finding you cannot ground. A guess that reads as a defect costs the author more time than silence.
 
 **End with an overall recommendation:** APPROVE, REQUEST CHANGES, or COMMENT.
 
