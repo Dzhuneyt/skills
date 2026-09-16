@@ -53,6 +53,16 @@ When a finding rests on a domain concept, explain that concept first, in three l
 
 Drop any finding you cannot ground. A guess that reads as a defect costs the author more time than silence.
 
+**Keep each finding short, and keep them apart.**
+
+One finding, one review comment. Do not bundle several into one body. A reader can accept or reject them one at a time only when they arrive that way.
+
+Shape each comment as evidence, consequence, fix, in that order.
+
+Aim for at most 3 paragraphs and 500 words of prose per comment. Code blocks do not count toward the limit, which applies to the prose around them. Go past it only when shortening would lose the substance, never to keep a point you are fond of.
+
+If a paragraph does not change what the author does next, cut it.
+
 **End with an overall recommendation:** APPROVE, REQUEST CHANGES, or COMMENT.
 
 **If no PR number/URL is provided:** Find the PR for the current branch. If on main branch, list open PRs and ask which one to review.
