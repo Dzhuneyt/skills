@@ -47,6 +47,8 @@ A finding that only describes code is not finished. Each one carries three parts
 2. **Evidence** — the command output, the test result, the probe you ran. Never inference presented as fact. When something stays unverified, label it and say what would settle it.
 3. **Failure walkthrough** — the same defect retold in the reader's terms. Name who is at the keyboard, the screen they are on, what they type, what they see, and what actually happens. Stop where the damage is done.
 
+Order matters as much as content. Open with the artifact that proves the finding, usually a few lines of code, a test, or real command output. Argument after evidence, never before it. A reader who meets the proof in the first breath spends the rest of the section judging it. A reader who meets the argument first spends that time deciding whether to believe you.
+
 When a finding rests on a domain concept, explain that concept first, in three lines or a small table. A reviewer who does not already hold the model cannot judge the finding.
 
 Drop any finding you cannot ground. A guess that reads as a defect costs the author more time than silence.
