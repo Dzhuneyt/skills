@@ -1,0 +1,5 @@
+{
+  "name": "dev-tidy",
+  "description": "Small helpers for tidy codebases",
+  "hooks": "./hooks/hooks.json"
+}
