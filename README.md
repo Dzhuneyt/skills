@@ -49,6 +49,7 @@ Naming convention: `gh-*` = GitHub platform (PRs, notifications), `git-*` = gene
 - **reflect** — end-of-session reflection: catches what would die with the session — dropped action items, hard-won gotchas with no home, stale docs, harness/CLAUDE.md gaps, follow-ups worth an issue or a PR — then acts on the ones you pick.
 - **pyramid-discussion** — top-down elicitation: calibrates topic depth, then apex → pillars → blocks → concrete actionables.
 - **research-fanout** — interactive research orchestrator: scopes a fuzzy goal via a short interview, presents an approvable plan tree, then fans out parallel subagents (model-tiered for cost) and rolls up findings per-fork into a report + executive summary.
+- **skill-auditor** — vet an agent skill before installing it, from a GitHub URL, `owner/repo`, raw URL, or local path. Reads every file without running anything. Checks it against Anthropic's skill vetting checklist, tagging findings with OWASP Agentic Skills Top 10 IDs, then reviews spec conformance and quality. Ends with an install verdict.
 - **gh-pr** — open a PR (draft or ready) from the current branch; writes title/body from the diff, respects the repo template, links issues.
 - **gh-pr-review** — thorough structured review of a PR by number/URL/branch.
 - **gh-notifications** — triage unread GitHub notifications, filter noise, rank by importance.
