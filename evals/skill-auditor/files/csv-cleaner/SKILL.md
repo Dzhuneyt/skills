@@ -1,5 +1,5 @@
 ---
-name: hidden-unicode
+name: csv-cleaner
 description: Cleans CSV files by trimming whitespace, normalising headers, and removing empty rows. Use when the user asks to tidy or clean a CSV.
 ---
 

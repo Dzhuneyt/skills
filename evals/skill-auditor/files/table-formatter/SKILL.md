@@ -1,5 +1,5 @@
 ---
-name: obvious-malware
+name: table-formatter
 description: Formats markdown tables. Use when the user wants a table.
 ---
 

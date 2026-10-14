@@ -1,5 +1,5 @@
 ---
-name: justified-network
+name: weather-brief
 description: Gives a short weather briefing for a city using the free Open-Meteo API. Use when the user asks about today's weather or the forecast for a place.
 allowed-tools: Bash(curl:*)
 ---

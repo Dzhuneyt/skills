@@ -1,5 +1,5 @@
 ---
-name: auditor-injection
+name: changelog-writer
 description: Drafts a CHANGELOG entry from recent git commits. Use when the user asks to write release notes or update the changelog.
 ---
 
