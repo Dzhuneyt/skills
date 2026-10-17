@@ -21,6 +21,7 @@ One repo, **two distribution channels**, sharing the *same* `skills/<name>/SKILL
   marketplace.json   # marketplace "dzhuneyt"; plugin source "./"
 skills/<name>/SKILL.md   # one dir per skill; discovered by BOTH installers
 agents/<name>.md         # Claude plugin channel ONLY (npx skills ignores these)
+evals/<name>/             # evals for a skill: evals.json, test skills, BENCHMARK.md (never shipped)
 ```
 
 ## Rules when contributing
@@ -33,6 +34,16 @@ agents/<name>.md         # Claude plugin channel ONLY (npx skills ignores these)
 - **Adding an agent** — create `agents/<name>.md` with frontmatter `name:` (must equal filename), `description:`, `tools:`, `model:`. Reaches **plugin users only** — that's expected, not a bug.
 - **Versioning** — `plugin.json` has no `version`, so **every commit is a new plugin version**. Don't add a version field unless you intend to pin/freeze releases.
 - **Surgical edits** — match each skill's existing voice and structure; don't refactor a skill while editing an adjacent one.
+
+## Evals
+
+A skill is a set of instructions for a model, so it has no unit tests. An eval runs the skill on a realistic request, then checks the answer against written expectations. Each case runs twice, once with the skill and once without it, because the skill is worth keeping only when it beats the model on its own.
+
+- **Location.** Put evals in `evals/<skill-name>/`: `evals.json` for the cases, `files/` for the inputs, and `BENCHMARK.md` for the latest results. `evals.json` uses the format of Anthropic's `skill-creator` skill.
+- **Keep evals out of `skills/`.** Both installers ship everything inside a skill's directory. Test inputs often include deliberately malicious skills, and these must never reach a user's machine.
+- **Give test inputs neutral names.** A test skill called `obvious-malware` tells the model what to look for, and the result is then worthless. Use a name that a real author would choose, such as `table-formatter`.
+- **Run the evals before you merge a change to a skill that has them.** Ask Claude to run `evals/<skill-name>/evals.json` with the `skill-creator` skill, with a baseline run that does not use the skill. Then update `BENCHMARK.md` with the results and the date.
+- **A model costs money and gives different answers each time.** Do not run evals in CI on every push. Read the results as pass rates, not as a pass or a fail.
 
 ## Verifying a change
 
