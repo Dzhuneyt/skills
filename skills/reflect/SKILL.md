@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: Use when the user invokes /reflect or asks to reflect on, wrap up, or take stock of the current session. Re-reads the in-context conversation for anything that would die when the session closes — dropped action items, durable lessons with no home, stale docs, skillify opportunities, global/project CLAUDE.md and AGENTS.md and README gaps, and follow-ups worth an issue or a PR — surfaces them as one ranked shortlist, then acts on the ones the user selects. Not a git-history retro and not a full doc audit.
+description: Use when the user invokes /reflect or asks to reflect on, wrap up, or take stock of the current session. Re-reads the in-context conversation for anything that would die when the session closes — dropped action items, durable lessons with no home, stale docs, skillify opportunities, global/project CLAUDE.md and AGENTS.md and README gaps, follow-ups worth an issue or a PR, and the places where the user had to steer the agent, turned into rules that prevent them — surfaces them as one ranked list, then acts on the ones the user selects. Not a git-history retro and not a full doc audit.
 ---
 
 # Reflect
@@ -55,9 +55,15 @@ Each detector has a hard confidence bar. An item that does not clear its bar is 
 - **Needs an issue:** a concrete follow-up the session identified and won't do. Bar: specific enough that someone else could pick it up cold (what, why, and roughly where), and not already tracked — search open issues before proposing one. "We should improve error handling sometime" fails; "`parseConfig` swallows the YAML error and returns `{}` — should surface it, see `config.ts:41`" passes.
 - Never open an issue or PR on your own. It goes through Step 4 like everything else.
 
+**G. Steering points** — places where the user had to correct, redirect, or ask for something the agent should have done on its own.
+- Look for: a correction ("that's wrong", "not X, Y"), a redirect ("drop this", "simplify"), a question the agent should have answered unprompted ("does this change anything?"), and a claim the agent made that was later shown wrong, whoever caught it.
+- For each, name the cause in one line, then propose the shortest rule that would have prevented it. Route the rule with the table below.
+- Skip a steering point an existing rule already covers. Say which rule, so the user can judge whether that rule failed and needs a rewrite.
+- Bar: the steering happened, and the cause is about how the agent works, not a one-off preference.
+
 ### Where knowledge goes
 
-Route every D/E finding to exactly one destination. Getting this wrong is the common failure — a repo-specific build quirk in the global memory file pollutes every other project.
+Route every D/E/G finding to exactly one destination. Getting this wrong is the common failure — a repo-specific build quirk in the global memory file pollutes every other project.
 
 | The knowledge is… | Destination |
 | --- | --- |
@@ -74,20 +80,20 @@ If a fact seems to want two destinations, pick the one whose *audience* actually
 
 ## Step 3 — Collect into one flat, ranked list
 
-Gather every finding that cleared its bar — across **all** detectors — into a single flat list held in memory. Keep each finding's category tag (A–F), but do NOT group the list by category.
+Gather every finding that cleared its bar — across **all** detectors — into a single flat list held in memory. Keep each finding's category tag (A–G), but do NOT group the list by category.
 
 - **Rank** by value = confidence × impact × **durability loss**. That third factor is the tiebreaker: between two equally good findings, the one that is *irrecoverable once this session closes* wins. A gotcha that exists nowhere but this transcript outranks a doc tweak anyone can spot later from the code.
 - **Merge before ranking.** Two findings headed for the same destination file become one finding, one question, one edit.
-- **Take the top 5.** Discard the rest. If more than 5 cleared their bars, say so in one line (e.g. "3 lower-confidence items dropped") so the user knows there's a tail, but do not surface them.
+- **Keep every finding that cleared its bar.** There is no cap. The bars above decide what gets surfaced; the ranking decides the order. Say how many findings there are before asking the first one.
 - If nothing cleared any bar, say "Nothing worth flagging" and stop.
 
 ## Step 4 — Ask one finding at a time
 
-Surface the shortlist as **separate, single-select `AskUserQuestion` questions — one question per finding**, in ranked order so your strongest recommendation comes first. Do NOT bundle findings into a single `multiSelect` question; that grouping gets in the way. Each finding is its own decision.
+Surface the ranked list as **separate, single-select `AskUserQuestion` questions — one question per finding**, in ranked order so your strongest recommendation comes first. Do NOT bundle findings into a single `multiSelect` question; that grouping gets in the way. Each finding is its own decision.
 
 For each finding's question:
-- `header`: the category label — "Loose end", "Doc gap", "Skillify", "CLAUDE.md", "Knowledge", or "Ship it".
-- `question`: state the finding concretely (what was dropped / what's stale / what would be lost / what to open), name the destination, then ask what to do.
+- `header`: the category label — "Loose end", "Doc gap", "Skillify", "CLAUDE.md", "Knowledge", "Ship it", or "Steering".
+- `question`: make it stand on its own: what happened (with the evidence), what you propose and where it goes, and what it costs. The user should be able to decide from the question alone, without scrolling back. If a proposed rule or edit is involved, include the draft text in the option's `preview`.
 - `options` (single-select, `multiSelect: false`): put **your recommended action first**, labeled `(Recommended)`. Follow with the realistic alternatives, ending with a clean decline. Typical recommended actions by category:
   - **A (loose end):** "Finish it now" — or, if large, "Do the smallest next step".
   - **B (doc gap):** "Show the diff and apply".
@@ -95,6 +101,7 @@ For each finding's question:
   - **D (CLAUDE.md/AGENTS.md):** append/rewrite → "Show the edit and apply"; hook → "Wire the hook via update-config".
   - **E (knowledge):** "Write it to <destination> now". Where the destination is genuinely arguable, make the alternatives the *other destinations* rather than a vaguer version of the same action.
   - **F (ship it):** "Open the PR" / "File the issue" — and show the draft title and body before creating anything.
+  - **G (steering):** "Show the rule and apply".
   - Always include a "Skip" / "Leave it" option last.
 
 Ask them one at a time (or a few per call, but never more than one **finding** per question). This lets you act on each answer before moving on.
@@ -108,6 +115,8 @@ For each finding the user chose to act on, do it in this session immediately:
 - **C (skillify):** draft a `SKILL.md` skeleton or propose `/gstack-skillify`. Don't force a full skill build inside `/reflect` — the stub or a deferral is fine.
 - **D (CLAUDE.md/AGENTS.md):** append/rewrite → show the exact memory-file diff (quoting the old line for a rewrite) and apply on approval; hook → invoke `update-config` to wire it.
 - **E (knowledge):** write it into the routed destination as a real diff against the current file — matching that file's existing voice, section structure, and level of detail. Keep it to the fact and its consequence; a durable line beats a paragraph of session narrative. Never paste conversation transcript into a memory file.
+- **G (steering):** show the drafted rule, then write it to the routed destination on approval.
+- **Writing a rule (D and G):** write a proposed rule as a short, directional principle that holds beyond this session: a few sentences on what to do and why, not a list of the cases that went wrong. Keep the incident to one line under **Why**. If a draft names this session's files, people or tools, ask whether it would still make sense without them. If not, generalise it. Show the draft before writing it.
 - **F (ship it):** PR → hand off to `/gh-pr` if available, otherwise commit, push, and open it with the drafted title and body. Issue → create it with the drafted title and body, and link it from anywhere in the repo that a reader would look for it. Show the draft first; create only after the user approves.
 
 Persist nothing to disk unless the user picked an action that writes, or explicitly asks for a written record.
