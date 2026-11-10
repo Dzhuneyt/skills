@@ -1,0 +1,89 @@
+{
+  "skill_name": "reflect",
+  "evals": [
+    {
+      "id": 1,
+      "name": "unanswered-bundle",
+      "prompt": "The transcript of my session so far is at evals/reflect/files/unanswered-bundle/transcript.md. Treat it as the conversation that is in your context. The repository it was about is at evals/reflect/files/unanswered-bundle/repo. Run /reflect.",
+      "expected_output": "Two loose ends (rename and legacy endpoint) surfaced; the answered retry question is not.",
+      "files": [
+        "evals/reflect/files/unanswered-bundle"
+      ],
+      "expectations": [
+        "Flags the `cust_nm` rename question as raised and never answered",
+        "Flags the `/v1/export-legacy` deletion question as raised and never answered",
+        "Does not flag the retry-count question, which the user answered",
+        "Asks each finding as its own single-select question, not one multi-select question",
+        "Makes no file edit, commit, issue or PR before the user answers"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "hard-won-gotcha",
+      "prompt": "The transcript of my session so far is at evals/reflect/files/hard-won-gotcha/transcript.md. Treat it as the conversation that is in your context. The repository it was about is at evals/reflect/files/hard-won-gotcha/repo. Run /reflect.",
+      "expected_output": "One homeless-knowledge finding about `make seed`, routed to the repo AGENTS.md, with the rejected approach recorded.",
+      "files": [
+        "evals/reflect/files/hard-won-gotcha"
+      ],
+      "expectations": [
+        "Finds that tests need `make seed` to run before `pytest` because migration 0007 depends on a table that Alembic does not create",
+        "Routes it to the repository's AGENTS.md or README.md, not to the global ~/.claude/CLAUDE.md",
+        "Records the rejected approach (making 0007 create the table) and why it fails",
+        "Shows the proposed text as a diff or preview before writing anything",
+        "Does not flag the `reorder_level` change, which was finished and tested",
+        "Does not propose a skill or a new agent for this one-time debugging"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "steering-rule",
+      "prompt": "The transcript of my session so far is at evals/reflect/files/steering-rule/transcript.md. Treat it as the conversation that is in your context. The repository it was about is at evals/reflect/files/steering-rule/repo. Run /reflect.",
+      "expected_output": "Two steering findings: one skipped with the existing rule cited, one turned into a general rule. The tabs preference is dropped.",
+      "files": [
+        "evals/reflect/files/steering-rule"
+      ],
+      "expectations": [
+        "Reports that the 'no ticket exists' claim is already covered by the existing 'Claims about absence' rule in AGENTS.md, and names that rule",
+        "Proposes a rule for the missed contradiction with decision 3: when new evidence arrives, report what it changes without being asked",
+        "The proposed rule is written as a general principle and does not name `plan.md`, the vendor, v2 or decision 3 in its rule text",
+        "Keeps the incident to one line, under a Why heading or equivalent",
+        "Does not propose a rule about using tabs, because it was a one-off preference for one file",
+        "Shows the drafted rule before writing it"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "clean-session",
+      "prompt": "The transcript of my session so far is at evals/reflect/files/clean-session/transcript.md. Treat it as the conversation that is in your context. The repository it was about is at evals/reflect/files/clean-session/repo. Run /reflect.",
+      "expected_output": "Nothing worth flagging, and no questions.",
+      "files": [
+        "evals/reflect/files/clean-session"
+      ],
+      "expectations": [
+        "States that there is nothing worth flagging",
+        "Asks no question and offers no action",
+        "Makes no file edit, commit, issue or PR"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "many-findings",
+      "prompt": "The transcript of my session so far is at evals/reflect/files/many-findings/transcript.md. Treat it as the conversation that is in your context. The repository it was about is at evals/reflect/files/many-findings/repo. Run /reflect.",
+      "expected_output": "At least six findings, none dropped for a cap, with the count stated before the first question.",
+      "files": [
+        "evals/reflect/files/many-findings"
+      ],
+      "expectations": [
+        "Surfaces at least six distinct findings; does not stop at five",
+        "States the total number of findings before asking the first question",
+        "Covers the unanswered logging question",
+        "Covers the stale README `DB_URL` setup line",
+        "Covers the Redis port 6380 gotcha and routes it to the repository, not the global file",
+        "Treats 'run ruff format after every edit' as a hook (via update-config), not as memory-file prose",
+        "Treats the uncommitted `feat/discount` change as a candidate PR and shows a draft before creating anything",
+        "Each question states the evidence and the proposal without relying on earlier text",
+        "Does not say that any findings were dropped because of a limit"
+      ]
+    }
+  ]
+}
