@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: unanswered-bundle
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  Two loose ends (rename and legacy endpoint) surfaced; the answered retry question is not.
