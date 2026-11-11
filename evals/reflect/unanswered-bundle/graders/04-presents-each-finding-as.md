@@ -4,4 +4,4 @@ focus: trace
 weight: 1
 ---
 
-Presents each finding as its own separate question with its own options, not one combined question
+Presents each finding separately, each with its own recommended action and options, not as one combined decision

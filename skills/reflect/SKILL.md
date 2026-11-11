@@ -47,11 +47,11 @@ Each detector has a hard confidence bar. An item that does not clear its bar is 
 **E. Homeless knowledge** — a durable fact this session established that currently lives *only* in this conversation.
 - What counts: a gotcha found the hard way (the build breaks unless X runs first), an environment or tooling constraint, the real shape of an external API that the docs got wrong, an approach tried and rejected **plus why**, a decision and its rationale, a non-obvious reason a piece of code is the way it is.
 - Rejected approaches are worth as much as chosen ones. "We tried X, it fails because Y" is exactly what the next session repeats if nobody writes it down.
-- Bar, all three: **(1)** it cost real effort to learn — a failed attempt, a debug loop, a doc dig — or the user asserted it as fact; **(2)** someone would plausibly hit it again; **(3)** you checked, and it isn't already written down. Anything recoverable in thirty seconds fails the bar.
+- Bar, all three: **(1)** it cost real effort to learn — a failed attempt, a debug loop, a doc dig — or the user asserted it as fact; **(2)** someone would plausibly hit it again; **(3)** you checked, and it isn't already written down. Anything recoverable in thirty seconds fails the bar. A preference the user scoped to one file or one moment ("for this file only", "just this time") is not knowledge either: drop it, as in detector D.
 - Then route it to a destination using the table below. A finding with no plausible destination is not a finding.
 
 **F. Unshipped work** — work that exists only in this session and needs somewhere durable to land.
-- **Needs a PR:** real code changes sitting in the working tree or on an unpushed branch, complete enough to review. Bar: the change exists and is coherent — not a half-edit you'd be embarrassed to open.
+- **Needs a PR:** real code changes sitting in the working tree or on an unpushed branch, complete enough to review. Bar: the change exists and is coherent — not a half-edit you'd be embarrassed to open — and you have evidence that it is not shipped yet: the conversation says it is uncommitted or unpushed, or `git status` shows it. "Tests pass" is not that evidence. If nothing shows that it is unshipped, drop the finding. Do not ask where the change lives, and do not raise a side concern about it (such as a missing migration) as a finding of its own.
 - **Needs an issue:** a concrete follow-up the session identified and won't do. Bar: specific enough that someone else could pick it up cold (what, why, and roughly where), and not already tracked — search open issues before proposing one. "We should improve error handling sometime" fails; "`parseConfig` swallows the YAML error and returns `{}` — should surface it, see `config.ts:41`" passes.
 - Never open an issue or PR on your own. It goes through Step 4 like everything else.
 
@@ -100,7 +100,7 @@ For each finding's question:
   - **C (skillify):** "Draft the SKILL.md skeleton".
   - **D (CLAUDE.md/AGENTS.md):** append/rewrite → "Show the edit and apply"; hook → "Wire the hook via update-config".
   - **E (knowledge):** "Write it to <destination> now". Where the destination is genuinely arguable, make the alternatives the *other destinations* rather than a vaguer version of the same action.
-  - **F (ship it):** "Open the PR" / "File the issue" — and show the draft title and body before creating anything.
+  - **F (ship it):** "Open the PR" / "File the issue" — put the draft title and body in the option's `preview` (or inline, if you cannot use previews), so the user decides on text they have already seen. Write both the title and the body now, from what the conversation says about the change, even if you cannot see the diff. Never write "I'll show it before pushing": that defers the decision to a draft that does not exist yet.
   - **G (steering):** "Show the rule and apply".
   - Always include a "Skip" / "Leave it" option last.
 
