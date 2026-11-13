@@ -200,6 +200,10 @@ If the change spans several types, pick the dominant one rather than inventing a
 Target under ~300 words plus at most one table. Past that, the extra is almost always
 restatement.
 
+Scale the body to the diff. ~300 words is a ceiling, not a target. A change of a few lines
+gets one short paragraph, plus the warnings a reviewer must not miss. Verification steps and
+background already recorded in the linked issue stay there.
+
 "Notes for review" is the section that goes wrong. It is not a summary of the diff — the diff is
 right there. It is the short list of things a reviewer could disagree with: an inference you drew,
 a judgement call, a number you're asserting, something you got wrong earlier in the branch. If
