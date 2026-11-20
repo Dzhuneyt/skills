@@ -34,6 +34,29 @@ Run 1 cost $12.45 and run 2 cost about $14 in total, with judging. The skill was
 
 **One check still fails by chance.** In run 2 the with-skill run failed "each question states its evidence and its proposal in itself" in `many-findings`. It passed in run 1. This looks like variance, not a regression, but one run cannot show it.
 
+## Real session: `traffic-spike`
+
+This case is a real 38-minute coding session. All names, IDs, domains and paths were replaced by fictional stand-ins. A request-count spike on a site was traced to a cloud health check, and the fix went through a spec change and a merged PR. A second, adversarial review then looked for what the text still reveals, and the transcript was trimmed to match (product description, code fingerprints, pasted third-party skill text, device-login details, time-zone hints, infrastructure details). Each arm ran 3 times, on 2026-11-20, on the trimmed transcript.
+
+| Check | With skill | Without skill |
+| --- | --- | --- |
+| Nothing monitors the site yet | 3/3 | 3/3 |
+| Cost steering: check quotas before saying "near zero" | 3/3 | 1/3 |
+| The Vercel connector saw one project; the CLI recipe ran twice | 3/3 | 0/3 |
+| The same stopgap question was asked several times | 0/3 | 0/3 |
+| Finished work is not listed as open | 3/3 | 2/3 |
+| No item says "no action needed" | 3/3 | 0/3 |
+| No PR or issue for the shipped change | 3/3 | 3/3 |
+| The rule line of each proposed rule is general | 3/3 | 0/3 |
+| The number of findings is stated first | 3/3 | 0/3 |
+| **Score per run** | **0.89, 0.89, 0.89** | **0.33, 0.33, 0.33** |
+
+The mean score was 0.89 with the skill and 0.33 without it, a gap of +0.56. The run cost $3.71. Two earlier 3-run passes on the untrimmed transcript gave 0.81 against 0.37, and then 0.85 against 0.41, after two unclear checks were reworded. The gap was +0.44 each time. Trimming the transcript did not remove the gap.
+
+**This case separates the arms much more than the short cases do.** Without the skill, the model gave a recap and a few notes. It found the open monitor item, but it did not state a count, did not record the repeated recipe, and gave no rules. With the skill, it gave a ranked list of findings with drafted rules and destinations.
+
+**One weakness in the skill.** The skill did not reliably notice that the assistant asked the same stopgap question several times. It passed this check in 2 of 3 runs, then 1 of 3, then 0 of 3, over the three passes. The baseline never passed. The skill's steering detector (G) has no bar that names "the same question asked again and again", and this may be why.
+
 ## Limits of these results
 
 - **Each case ran once per configuration.** A single run does not show how much the results vary.
@@ -42,6 +65,10 @@ Run 1 cost $12.45 and run 2 cost about $14 in total, with judging. The skill was
 - **The judge gives no reasons.** The report shows only the votes. A failed check needs a look at the run's trace to find the cause.
 - **The input is a transcript file, not a live session.** The skill normally reads the conversation in context. These cases do not test a compacted session.
 - **An earlier run was contaminated and is not used.** That run used native subagents, which loaded the operator's global rules. It scored the skill 25/29 and the baseline 20/29. One case (`steering-rule`) was invalid because a global rule already covered the case. `claude plugin eval` gives each run a temporary home, so no personal rules load.
+
+- **The real-session checks were written after an earlier report.** I wrote the expected findings after reading a with-skill report from an exploratory run, then checked each one against the transcript. This favours the skill. The check about the repeated stopgap question accepts either rule (do not re-ask, or ask it first and alone).
+- **The real session is condensed and trimmed.** Tool calls and results are clipped to short lines, and the pasted third-party skill text was replaced by one-line stubs. Some evidence is lost.
+- **One real session is one example.** The size of the gap may not hold for other sessions.
 
 ## How to run it again
 
