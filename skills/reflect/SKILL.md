@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: Use when the user invokes /reflect or asks to reflect on, wrap up, or take stock of the current session. Re-reads the in-context conversation for anything that would die when the session closes — dropped action items, durable lessons with no home, stale docs, skillify opportunities, global/project CLAUDE.md and AGENTS.md and README gaps, and follow-ups worth an issue or a PR — surfaces them as one ranked shortlist, then acts on the ones the user selects. Not a git-history retro and not a full doc audit.
+description: Use when the user invokes /reflect or asks to reflect on, wrap up, or take stock of the current session. Re-reads the in-context conversation for anything that would die when the session closes — dropped action items, durable lessons with no home, stale docs, skillify opportunities, global/project CLAUDE.md and AGENTS.md and README gaps, follow-ups worth an issue or a PR, and the places where the user had to steer the agent, turned into rules that prevent them — surfaces them as one ranked list, then acts on the ones the user selects. Not a git-history retro and not a full doc audit.
 ---
 
 # Reflect
@@ -47,17 +47,23 @@ Each detector has a hard confidence bar. An item that does not clear its bar is 
 **E. Homeless knowledge** — a durable fact this session established that currently lives *only* in this conversation.
 - What counts: a gotcha found the hard way (the build breaks unless X runs first), an environment or tooling constraint, the real shape of an external API that the docs got wrong, an approach tried and rejected **plus why**, a decision and its rationale, a non-obvious reason a piece of code is the way it is.
 - Rejected approaches are worth as much as chosen ones. "We tried X, it fails because Y" is exactly what the next session repeats if nobody writes it down.
-- Bar, all three: **(1)** it cost real effort to learn — a failed attempt, a debug loop, a doc dig — or the user asserted it as fact; **(2)** someone would plausibly hit it again; **(3)** you checked, and it isn't already written down. Anything recoverable in thirty seconds fails the bar.
+- Bar, all three: **(1)** it cost real effort to learn — a failed attempt, a debug loop, a doc dig — or the user asserted it as fact; **(2)** someone would plausibly hit it again; **(3)** you checked, and it isn't already written down. Anything recoverable in thirty seconds fails the bar. A preference the user scoped to one file or one moment ("for this file only", "just this time") is not knowledge either: drop it, as in detector D.
 - Then route it to a destination using the table below. A finding with no plausible destination is not a finding.
 
 **F. Unshipped work** — work that exists only in this session and needs somewhere durable to land.
-- **Needs a PR:** real code changes sitting in the working tree or on an unpushed branch, complete enough to review. Bar: the change exists and is coherent — not a half-edit you'd be embarrassed to open.
+- **Needs a PR:** real code changes sitting in the working tree or on an unpushed branch, complete enough to review. Bar: the change exists and is coherent — not a half-edit you'd be embarrassed to open — and you have evidence that it is not shipped yet: the conversation says it is uncommitted or unpushed, or `git status` shows it. "Tests pass" is not that evidence. If nothing shows that it is unshipped, drop the finding. Do not ask where the change lives, and do not raise a side concern about it (such as a missing migration) as a finding of its own.
 - **Needs an issue:** a concrete follow-up the session identified and won't do. Bar: specific enough that someone else could pick it up cold (what, why, and roughly where), and not already tracked — search open issues before proposing one. "We should improve error handling sometime" fails; "`parseConfig` swallows the YAML error and returns `{}` — should surface it, see `config.ts:41`" passes.
 - Never open an issue or PR on your own. It goes through Step 4 like everything else.
 
+**G. Steering points** — places where the user had to correct, redirect, or ask for something the agent should have done on its own.
+- Look for: a correction ("that's wrong", "not X, Y"), a redirect ("drop this", "simplify"), a question the agent should have answered unprompted ("does this change anything?"), and a claim the agent made that was later shown wrong, whoever caught it.
+- For each, name the cause in one line, then propose the shortest rule that would have prevented it. Route the rule with the table below.
+- Skip a steering point an existing rule already covers. Say which rule, so the user can judge whether that rule failed and needs a rewrite.
+- Bar: the steering happened, and the cause is about how the agent works, not a one-off preference.
+
 ### Where knowledge goes
 
-Route every D/E finding to exactly one destination. Getting this wrong is the common failure — a repo-specific build quirk in the global memory file pollutes every other project.
+Route every D/E/G finding to exactly one destination. Getting this wrong is the common failure — a repo-specific build quirk in the global memory file pollutes every other project.
 
 | The knowledge is… | Destination |
 | --- | --- |
@@ -74,27 +80,28 @@ If a fact seems to want two destinations, pick the one whose *audience* actually
 
 ## Step 3 — Collect into one flat, ranked list
 
-Gather every finding that cleared its bar — across **all** detectors — into a single flat list held in memory. Keep each finding's category tag (A–F), but do NOT group the list by category.
+Gather every finding that cleared its bar — across **all** detectors — into a single flat list held in memory. Keep each finding's category tag (A–G), but do NOT group the list by category.
 
 - **Rank** by value = confidence × impact × **durability loss**. That third factor is the tiebreaker: between two equally good findings, the one that is *irrecoverable once this session closes* wins. A gotcha that exists nowhere but this transcript outranks a doc tweak anyone can spot later from the code.
 - **Merge before ranking.** Two findings headed for the same destination file become one finding, one question, one edit.
-- **Take the top 5.** Discard the rest. If more than 5 cleared their bars, say so in one line (e.g. "3 lower-confidence items dropped") so the user knows there's a tail, but do not surface them.
+- **Keep every finding that cleared its bar.** There is no cap. The bars above decide what gets surfaced; the ranking decides the order. Say how many findings there are before asking the first one.
 - If nothing cleared any bar, say "Nothing worth flagging" and stop.
 
 ## Step 4 — Ask one finding at a time
 
-Surface the shortlist as **separate, single-select `AskUserQuestion` questions — one question per finding**, in ranked order so your strongest recommendation comes first. Do NOT bundle findings into a single `multiSelect` question; that grouping gets in the way. Each finding is its own decision.
+Surface the ranked list as **separate, single-select `AskUserQuestion` questions — one question per finding**, in ranked order so your strongest recommendation comes first. Do NOT bundle findings into a single `multiSelect` question; that grouping gets in the way. Each finding is its own decision.
 
 For each finding's question:
-- `header`: the category label — "Loose end", "Doc gap", "Skillify", "CLAUDE.md", "Knowledge", or "Ship it".
-- `question`: state the finding concretely (what was dropped / what's stale / what would be lost / what to open), name the destination, then ask what to do.
+- `header`: the category label — "Loose end", "Doc gap", "Skillify", "CLAUDE.md", "Knowledge", "Ship it", or "Steering".
+- `question`: make it stand on its own: what happened (with the evidence), what you propose and where it goes, and what it costs. The user should be able to decide from the question alone, without scrolling back. If a proposed rule or edit is involved, include the draft text in the option's `preview`.
 - `options` (single-select, `multiSelect: false`): put **your recommended action first**, labeled `(Recommended)`. Follow with the realistic alternatives, ending with a clean decline. Typical recommended actions by category:
   - **A (loose end):** "Finish it now" — or, if large, "Do the smallest next step".
   - **B (doc gap):** "Show the diff and apply".
   - **C (skillify):** "Draft the SKILL.md skeleton".
   - **D (CLAUDE.md/AGENTS.md):** append/rewrite → "Show the edit and apply"; hook → "Wire the hook via update-config".
   - **E (knowledge):** "Write it to <destination> now". Where the destination is genuinely arguable, make the alternatives the *other destinations* rather than a vaguer version of the same action.
-  - **F (ship it):** "Open the PR" / "File the issue" — and show the draft title and body before creating anything.
+  - **F (ship it):** "Open the PR" / "File the issue" — put the draft title and body in the option's `preview` (or inline, if you cannot use previews), so the user decides on text they have already seen. Write both the title and the body now, from what the conversation says about the change, even if you cannot see the diff. Never write "I'll show it before pushing": that defers the decision to a draft that does not exist yet.
+  - **G (steering):** "Show the rule and apply".
   - Always include a "Skip" / "Leave it" option last.
 
 Ask them one at a time (or a few per call, but never more than one **finding** per question). This lets you act on each answer before moving on.
@@ -108,6 +115,8 @@ For each finding the user chose to act on, do it in this session immediately:
 - **C (skillify):** draft a `SKILL.md` skeleton or propose `/gstack-skillify`. Don't force a full skill build inside `/reflect` — the stub or a deferral is fine.
 - **D (CLAUDE.md/AGENTS.md):** append/rewrite → show the exact memory-file diff (quoting the old line for a rewrite) and apply on approval; hook → invoke `update-config` to wire it.
 - **E (knowledge):** write it into the routed destination as a real diff against the current file — matching that file's existing voice, section structure, and level of detail. Keep it to the fact and its consequence; a durable line beats a paragraph of session narrative. Never paste conversation transcript into a memory file.
+- **G (steering):** show the drafted rule, then write it to the routed destination on approval.
+- **Writing a rule (D and G):** write a proposed rule as a short, directional principle that holds beyond this session: a few sentences on what to do and why, not a list of the cases that went wrong. Keep the incident to one line under **Why**. If a draft names this session's files, people or tools, ask whether it would still make sense without them. If not, generalise it. Show the draft before writing it.
 - **F (ship it):** PR → hand off to `/gh-pr` if available, otherwise commit, push, and open it with the drafted title and body. Issue → create it with the drafted title and body, and link it from anywhere in the repo that a reader would look for it. Show the draft first; create only after the user approves.
 
 Persist nothing to disk unless the user picked an action that writes, or explicitly asks for a written record.

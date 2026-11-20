@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: clean-session
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  Nothing worth flagging, and no questions.

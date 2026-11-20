@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: steering-rule
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  Two steering findings: one skipped with the existing rule cited, one turned into a general rule. The tabs preference is dropped.

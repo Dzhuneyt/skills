@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: hard-won-gotcha
+context:
+  scaffold_script: place-files.sh
+expected_outcome: |
+  One homeless-knowledge finding about `make seed`, routed to the repo AGENTS.md, with the rejected approach recorded.
